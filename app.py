@@ -6,17 +6,15 @@ st.set_page_config(
     layout="centered"
 )
 
-# 2. STYLING (Custom CSS agar tampilan modern dan profesional)
+# 2. STYLING (Sudah diperbaiki agar support Light & Dark Mode secara otomatis)
 st.markdown("""
 <style>
-.stApp {
-    background-color: #F8FAFC;
-}
+/* Menggunakan CSS Variables bawaan Streamlit agar warna teks otomatis menyesuaikan tema */
 .title {
     text-align: center;
     font-size: 38px;
     font-weight: 800;
-    color: #1E3A8A;
+    color: #4F46E5; /* Menggunakan warna Indigo yang aman di dark/light mode */
     margin-bottom: 5px;
 }
 .subtitle {
@@ -26,12 +24,11 @@ st.markdown("""
     margin-bottom: 30px;
 }
 .box-fakta {
-    background-color: white;
     padding: 25px;
     border-radius: 16px;
-    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
-    border: 1px solid #E2E8F0;
+    border: 1px solid #CBD5E1;
     margin-bottom: 25px;
+    background-color: transparent; /* Agar mengikuti background tema Streamlit */
 }
 .result-card {
     padding: 20px;
@@ -39,6 +36,16 @@ st.markdown("""
     background-color: #EFF6FF;
     border-left: 5px solid #3B82F6;
     margin-top: 15px;
+}
+/* Memastikan teks di dalam result-card tetap terbaca di dark mode */
+.result-card h4 {
+    color: #1E3A8A !important;
+    margin: 0 0 8px 0;
+}
+.result-card p {
+    color: #1E293B !important;
+    margin: 0;
+    font-size: 14px;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -48,7 +55,6 @@ st.markdown('<p class="title">Sistem Pakar Pemilihan Jurusan</p>', unsafe_allow_
 st.markdown('<p class="subtitle">Membantu Kamu Menentukan Masa Depan Akademik Sesuai Minatmu</p>', unsafe_allow_html=True)
 
 # 4. KNOWLEDGE BASE (Penyimpanan Fakta & Aturan secara Terstruktur)
-# Kumpulan Aturan (Rules) yang mencakup minimal 5 fakta dan lebih dari 5 kombinasi aturan terarah
 KNOWLEDGE_RULES = [
     {
         "conditions": ["logika", "komputer"],
@@ -87,25 +93,23 @@ KNOWLEDGE_RULES = [
     }
 ]
 
-# 5. INPUT FAKTA (User Interface untuk mengumpulkan Fakta dari pengguna)
-st.subheader("📋 Pilih Karakteristik & Minatmu:")
-st.write("Centang semua pernyataan yang paling menggambarkan dirimu sekarang:")
+# 5. INPUT FAKTA (Dibungkus container bawaan Streamlit agar teks checkbox aman di dark mode)
+with st.container():
+    st.subheader("📋 Pilih Karakteristik & Minatmu:")
+    st.write("Centang semua pernyataan yang paling menggambarkan dirimu sekarang:")
+    
+    fakta_logika = st.checkbox("Saya suka memecahkan teka-teki logika, analisis, dan matematika.")
+    fakta_komputer = st.checkbox("Saya tertarik mempelajari software, coding, hardware, atau teknologi digital.")
+    fakta_desain = st.checkbox("Saya senang menggambar, membuat desain grafis, fotografi, atau editing video.")
+    fakta_komunikasi = st.checkbox("Saya percaya diri dalam berbicara di depan umum, presentasi, atau negosiasi.")
+    fakta_bisnis = st.checkbox("Saya tertarik dengan dunia wirausaha, investasi, manajemen, atau strategi pasar.")
+    fakta_kesehatan = st.checkbox("Saya menyukai pelajaran biologi, anatomi, atau hal-hal medis.")
+    fakta_sosial = st.checkbox("Saya senang membantu sesama manusia dan peduli dengan isu kemanusiaan.")
 
-# Menyediakan fakta yang lebih luas dan banyak pilihan (>5 Fakta)
-fakta_logika = st.checkbox("Saya suka memecahkan teka-teki logika, analisis, dan matematika.")
-fakta_komputer = st.checkbox("Saya tertarik mempelajari software, coding, hardware, atau teknologi digital.")
-fakta_desain = st.checkbox("Saya senang menggambar, membuat desain grafis, fotografi, atau editing video.")
-fakta_komunikasi = st.checkbox("Saya percaya diri dalam berbicara di depan umum, presentasi, atau negosiasi.")
-fakta_bisnis = st.checkbox("Saya tertarik dengan dunia wirausaha, investasi, manajemen, atau strategi pasar.")
-fakta_kesehatan = st.checkbox("Saya menyukai pelajaran biologi, anatomi, atau hal-hal medis.")
-fakta_sosial = st.checkbox("Saya senang membantu sesama manusia dan peduli dengan isu kemanusiaan.")
-
-st.markdown('</div>', unsafe_allow_html=True)
-
-# 6. INFERENCE ENGINE (Mesin Pelacak forward-chaining yang terpicu saat tombol ditekan)
+# 6. INFERENCE ENGINE (Mesin Pelacak forward-chaining)
 if st.button("🔍 Lihat Hasil Rekomendasi", type="primary", use_container_width=True):
     
-    # Kumpulkan fakta yang aktif ke dalam list aktif
+    # Kumpulkan fakta yang aktif
     fakta_aktif = []
     if fakta_logika: fakta_aktif.append("logika")
     if fakta_komputer: fakta_aktif.append("komputer")
@@ -115,33 +119,30 @@ if st.button("🔍 Lihat Hasil Rekomendasi", type="primary", use_container_width
     if fakta_kesehatan: fakta_aktif.append("kesehatan")
     if fakta_sosial: fakta_aktif.append("sosial")
 
-    # Evaluasi aturan berdasarkan fakta aktif
+    # Evaluasi aturan
     hasil_rekomendasi = []
-    
     for rule in KNOWLEDGE_RULES:
-        # Cek apakah semua kondisi dalam rule tersebut terpenuhi oleh fakta_aktif dari user
         if all(cond in fakta_aktif for cond in rule["conditions"]):
             hasil_rekomendasi.append(rule)
 
-    # 7. OUTPUT RENDERER (Menampilkan Hasil Kesimpulan)
+    # 7. OUTPUT RENDERER
     if hasil_rekomendasi:
-        st.balloons() # Efek visual animasi balon sukses
+        st.balloons() 
         st.success(f"{len(hasil_rekomendasi)} rekomendasi jurusan yang cocok untukmu:")
         
         for item in hasil_rekomendasi:
             st.markdown(f"""
             <div class="result-card">
-                <h4 style="margin: 0 0 8px 0; color: #1E3A8A;">{item['jurusan']}</h4>
-                <p style="margin: 0; color: #475569; font-size: 14px;"><b>Alasan :</b> {item['alasan']}</p>
+                <h4>{item['jurusan']}</h4>
+                <p><b>Alasan :</b> {item['alasan']}</p>
             </div>
             """, unsafe_allow_html=True)
             
     else:
-        # Jika fakta kurang atau kombinasi tidak menghasilkan kesimpulan tertentu
         if len(fakta_aktif) < 2:
-            st.warning("⚠️ Silakan pilih minimal 2 atau lebih kombinasi minatmu untuk mendapatkan rekomendasi yang lebih sesuai.")
+            st.warning("⚠️ Silakan pilih minimal 2 atau lebih kombinasi minatmu untuk mendapatkan rekomendasi.")
         else:
-            st.info("💡 Kombinasi peminatanmu sangat unik! Kami menyarankan untuk mengambil kelas General Studies atau berkonsultasi langsung dengan konselor akademik.")
+            st.info("💡 Kombinasi peminatanmu sangat unik! Kami menyarankan untuk berkonsultasi langsung dengan konselor akademik.")
 
 # FOOTER
 st.markdown("<br><hr><center style='color: #94A3B8; font-size: 12px;'>Sistem Pakar Pemilihan Jurusan</center>", unsafe_allow_html=True)
